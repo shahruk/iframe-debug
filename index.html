@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+  <head>
+    <title>ELC IFrame Debugger</title>
+  </head>
+  <body>
+    <button class="test-action" data-query='{"_elc_action":"product.getProducts","productIds":["PROD93195"]}'>Get Products</button>
+    <br />
+    <br />
+
+    <button class="test-action" data-query='{"_elc_action":"api.cms", "nid": "12345"}'>Call CMS API</button>
+    <br />
+    <br />
+
+
+    <button class="test-action" data-query='{"_elc_action":"api.jsonrpc", "method": "user.getFavorites", "params": [{}]}'>Call JSONRPC API</button>
+    <br />
+    <br />
+
+    <button class="test-action" data-query='{"_elc_action":"quiz.getHairCareFinderResults"}'>Get Saved Quiz Results</button>
+    <br />
+    <br />
+
+    <button class="test-action" data-query='{"_elc_action":"quiz.save_hair_care_finder_results", "params":[{"sku_base_id":["33408","33409","148319","33414","33401","33420","141886"],"quiz_url":"show_results=1&hair_type=medium&texture=wavy&dream=shiny&main_concern=thinning&wash_frequency=other&scalp_feels=oily&scalp_i_see=some&styling=curling&i_do_this=none&environment=cold"}]}'>Save Quiz Results</button>
+    <br />
+    <br />
+
+    <div>
+      <textarea rows="100" cols="20" id="input" placeholder="Paste postmessage here" style="resize: none;width: 400px; height: 120px;color:black;"></textarea>
+    </div>
+    <div>
+      <span style="color: #999999;">Example postmessage:</span>
+      <pre><code>{"_elc_action":"product.getProducts","productIds":["PROD93195"]}</code>
+      </pre>
+    </div>
+    <button class="button1" id="send">Send postmessage</button>
+
+    <!-- The Iframe response will be displayed here -->
+    <div id="response"></div>
+
+    <script>
+      const sendButton = document.getElementById('send');
+      const inputArea = document.getElementById('input');
+      const responseArea = document.getElementById('response');
+      const testActionButtons = document.getElementsByClassName('test-action');
+
+      // Required script
+      var iframeResizerContentWindow = document.createElement('script');
+      iframeResizerContentWindow.src = 'https://cdnjs.cloudflare.com/ajax/libs/iframe-resizer/4.3.1/iframeResizer.contentWindow.min.js';
+      iframeResizerContentWindow.type = 'text/javascript';
+
+      // Recommended settings to avoid scrolling issues on multi-step experiences
+      window.iFrameResizer = {
+          autoResize: false,
+          sizeHeight: true,
+      };
+
+      // Experience starts after the window.parentIFrame is available, which is determined by parent IFrame.
+      // Listen to incoming messages from the Parent IFrame
+      window.addEventListener('message', (event) => {
+        let z = event.data;
+        if (z.includes('_elc_action')) {
+          responseArea.innerHTML = z;
+          console.log('receiving', z);
+        }
+      }, false);
+
+      // Optionally start capturing clicks before contentWindow script has loaded
+      sendButton.addEventListener('click', function() {
+        responseArea.innerHTML = '';
+        let x = inputArea.value;
+        let postMessage = JSON.parse(x);
+        console.log('sending', postMessage);
+        if ('parentIFrame' in window) {
+          window.parentIFrame.sendMessage(postMessage);
+        } else {
+          // Your custom code to display loading state...
+        }
+      });
+
+      for (var i = 0; i < testActionButtons.length; i++) {
+        testActionButtons[i].addEventListener('click', (event) => {
+          let query = event.target.getAttribute('data-query');
+          inputArea.value = event.target.getAttribute('data-query');
+          sendButton.click();
+        });
+      }
+
+
+      // Start loading the required content window script
+      document.getElementsByTagName('head')[0].appendChild(iframeResizerContentWindow);
+
+      </script>
+  </body>
+</html>
